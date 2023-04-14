@@ -1,0 +1,17 @@
+.container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+    max-width: 80%;
+    margin-left: auto;
+}
+
+.message {
+    padding: 20px;
+    background: linear-gradient(#c6e2f8, #a5cae7);
+    border-radius: 17px;
+    border-bottom-right-radius: 17px;
+    box-shadow: 0 2px 4px #00000024, 0 0 2px #0000001f;
+    outline: #d3ecffb8 solid 1px;
+    border-bottom-right-radius: 0px;
+}
