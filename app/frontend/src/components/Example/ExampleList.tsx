@@ -9,11 +9,11 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "Ce sunt colicii la copii?",
-        value: "Ce sunt colicii la copii?"
+        text: "Detalii despre LEGEA nr. 144/2022 sub forma de lista",
+        value: "Detalii despre LEGEA nr. 144/2022 sub forma de lista"
     },
-    { text: "Categorii de nou-născuţi cu risc", value: "Categorii de nou-născuţi cu risc" },
-    { text: "Tratament copil postmatur", value: "Tratament copil postmatur" }
+    { text: "Cum combat in instanta incalcarea articolului 17?", value: "Cum combat in instanta incalcarea articolului 17?" },
+    { text: "Diferente intre Art. 27 si Art. 29", value: "Diferente intre Art. 27 si Art. 29" }
 ];
 
 interface Props {

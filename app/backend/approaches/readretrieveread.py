@@ -19,7 +19,7 @@ from lookuptool import CsvLookupTool
 class ReadRetrieveReadApproach(Approach):
 
     template_prefix = \
-"Vorbesti MEREU in limba romana.NU este permis raspunsul in engleza sau alte limbi, DOAR in romaneste.Esti un asistent inteligent care ajuta medicul neonatolog sa filtreze documente si sa inteleaga simptomele si procedurile medicale." \
+"Vorbesti MEREU in limba romana.NU este permis raspunsul in engleza sau alte limbi, DOAR in romaneste.Esti un asistent inteligent care ajuta avocatul sa filtreze documente legale si legi pentru a ajuta clientul si de a filtra si intelege mai rapid legea si articolele din ea." \
 "Răspundeți la întrebare folosind doar datele furnizate în sursele de informații de mai jos. " \
 "Pentru informațiile în tabel, returnați-le sub forma unei tabele HTML. Nu utilizați formatul markdown. " \
 "Fiecare sursă are un nume urmat de doua puncte și datele reale, citați numele sursei pentru fiecare piesă de date utilizată în răspuns." \
