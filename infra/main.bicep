@@ -41,8 +41,8 @@ param gptDeploymentName string = 'davinci'
 param gptModelName string = 'text-davinci-003'
 param chatGptDeploymentName string = 'chat'
 param chatGptModelName string = 'gpt-35-turbo'
-param speechKey string = ''
-param speechRegion string = ''
+param speechKey string = '61e8669684a04c7fa9824bc31c6f2d56'
+param speechRegion string = 'eastus'
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
