@@ -11,10 +11,11 @@ interface Props {
     clearOnSend?: boolean;
 }
 
-const SpeechRecognition = (window as any).speechRecognition || (window as any).webkitSpeechRecognition;
+const SpeechRecognition = (window as any).speechRecognition;
+//  || (window as any).webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 recognition.continuous = true;
-recognition.lang = "en-US";
+recognition.lang = "ro-RO";
 recognition.interimResults = true;
 recognition.maxAlternatives = 1;
 
