@@ -11,8 +11,7 @@ interface Props {
     clearOnSend?: boolean;
 }
 
-const SpeechRecognition = (window as any).speechRecognition;
-//  || (window as any).webkitSpeechRecognition;
+const SpeechRecognition = (window as any).speechRecognition || (window as any).webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 recognition.continuous = true;
 recognition.lang = "ro-RO";
