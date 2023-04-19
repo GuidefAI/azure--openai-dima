@@ -6,11 +6,16 @@ import openai
 from flask import Flask, request, jsonify
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
+
+from azure.search.documents.indexes import SearchIndexClient
+
 from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from azure.storage.blob import BlobServiceClient
+
+from indexdocs import index_document
 
 # Replace these with your own values, either in environment variables or directly here
 AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT") or "mystorageaccount"
@@ -20,6 +25,9 @@ AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX") or "gptkbindex"
 AZURE_OPENAI_SERVICE = os.environ.get("AZURE_OPENAI_SERVICE") or "myopenai"
 AZURE_OPENAI_GPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT_DEPLOYMENT") or "davinci"
 AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHATGPT_DEPLOYMENT") or "chat"
+
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") or "/tmp"
+ALLOWED_FILE_EXTENSIONS = {'pdf'}
 
 KB_FIELDS_CONTENT = os.environ.get("KB_FIELDS_CONTENT") or "content"
 KB_FIELDS_CATEGORY = os.environ.get("KB_FIELDS_CATEGORY") or "category"
@@ -46,6 +54,12 @@ search_client = SearchClient(
     endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
     index_name=AZURE_SEARCH_INDEX,
     credential=azure_credential)
+#upload file
+index_client = SearchIndexClient(
+    endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+    index_name=AZURE_SEARCH_INDEX,
+    credential=azure_credential)
+
 blob_client = BlobServiceClient(
     account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", 
     credential=azure_credential)
@@ -109,11 +123,49 @@ def chat():
         logging.exception("Exception in /chat")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/upload", methods=["POST"])
+def upload():
+    print()
+    # Generate a unique folder name using the current time
+    folder_name = str(int(time.time()))
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nici un pdf urcat.'})
+    if len(request.files.getlist('file')) == 0:
+        return jsonify({'error': 'Nici un fisier selectat'})
+    for file in request.files.getlist('file'):
+        print(f"Incarc fisierul {file.filename} in {folder_name}")
+        # Create the folder if it doesn't exist
+        folder_path = os.path.join(UPLOAD_FOLDER, folder_name)
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        file_path = os.path.join(folder_path, file.filename)
+        if file and allowed_file(file.filename):
+            file.save(file_path)
+            print(f"Incarcat in {file_path}")
+    try:
+        r = index_document(folder_path=folder_path, search_client=search_client,
+                    blob_container=blob_container, index=AZURE_SEARCH_INDEX, index_client= index_client)
+        print(r)
+        success_values = [d['success'] for d in r]
+        if all(success_values):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Am inampinat probleme cu cateva fisiere'})
+    except Exception as e:
+        logging.error(e)
+        return jsonify({'success': False, 'error': e})
+    
+
 def ensure_openai_token():
     global openai_token
     if openai_token.expires_on < int(time.time()) - 60:
         openai_token = azure_credential.get_token("https://cognitiveservices.azure.com/.default")
         openai.api_key = openai_token.token
     
+#upload file
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_FILE_EXTENSIONS    
+
 if __name__ == "__main__":
     app.run()

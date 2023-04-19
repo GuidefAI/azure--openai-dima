@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { initializeIcons } from "@fluentui/react";
+import FileUploader from "./pages/uploadfile/FileUploader";
 
 import "./index.css";
 
@@ -19,6 +20,7 @@ export default function App() {
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Chat />} />
                     <Route path="qa" element={<OneShot />} />
+                    <Route path="ul" element={<FileUploader />} />
                     <Route path="*" element={<NoPage />} />
                 </Route>
             </Routes>
