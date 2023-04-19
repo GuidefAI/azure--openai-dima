@@ -10,13 +10,19 @@ interface Props {
     placeholder?: string;
     clearOnSend?: boolean;
 }
-
-const SpeechRecognition = (window as any).speechRecognition || (window as any).webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
-recognition.continuous = true;
-recognition.lang = "ro-RO";
-recognition.interimResults = true;
-recognition.maxAlternatives = 1;
+let SpeechRecognition: any;
+if ("SpeechRecognition" in window) {
+    const SpeechRecognition = (window as any).speechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    // const SpeechRecognition = (window as any).speechRecognition || (window as any).webkitSpeechRecognition;
+    // const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.lang = "ro-RO";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+} else {
+    console.log("Speech recognition not supported");
+}
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Props) => {
     const [question, setQuestion] = useState<string>("");
@@ -64,7 +70,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
 
     const stopRecording = () => {
         console.log("stop recording");
-        recognition.stop();
+        // recognition.stop();
         setIsRecording(false);
     };
 
