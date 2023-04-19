@@ -16,6 +16,7 @@ from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from azure.storage.blob import BlobServiceClient
 
 from indexdocs import index_document
+import azure.cognitiveservices.speech as speechsdk
 
 # Replace these with your own values, either in environment variables or directly here
 AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT") or "mystorageaccount"
@@ -32,6 +33,9 @@ ALLOWED_FILE_EXTENSIONS = {'pdf'}
 KB_FIELDS_CONTENT = os.environ.get("KB_FIELDS_CONTENT") or "content"
 KB_FIELDS_CATEGORY = os.environ.get("KB_FIELDS_CATEGORY") or "category"
 KB_FIELDS_SOURCEPAGE = os.environ.get("KB_FIELDS_SOURCEPAGE") or "sourcepage"
+
+SPEECH_KEY = os.environ.get("61e8669684a04c7fa9824bc31c6f2d56")
+SPEECH_REGION = os.environ.get("eastus")
 
 # Use the current user identity to authenticate with Azure OpenAI, Cognitive Search and Blob Storage (no secrets needed, 
 # just use 'az login' locally, and managed identity when deployed on Azure). If you need to use keys, use separate AzureKeyCredential instances with the 
@@ -155,6 +159,21 @@ def upload():
         logging.error(e)
         return jsonify({'success': False, 'error': e})
     
+
+@app.route("/speech", methods=["POST"])
+def speech():
+    ensure_openai_token()
+    text = request.json["text"]
+    try:
+        speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
+        speech_config.speech_synthesis_voice_name='ro-RO-EmilNeural'
+        speech_config.speech_synthesis_output_format = speechsdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3
+        synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
+        result = synthesizer.speak_text_async(text).get()
+        return result.audio_data, 200, {"Content-Type": "audio/mp3"}
+    except Exception as e:
+        logging.exception("Exception in /speech")
+        return jsonify({"error": str(e)}), 500
 
 def ensure_openai_token():
     global openai_token

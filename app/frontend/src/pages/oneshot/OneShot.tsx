@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
-import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinner, TextField, SpinButton } from "@fluentui/react";
+import { Checkbox, ChoiceGroup, IChoiceGroupOption, Panel, DefaultButton, Spinner, TextField, SpinButton, getFadedOverflowStyle } from "@fluentui/react";
 
 import styles from "./OneShot.module.css";
 
-import { askApi, Approaches, AskResponse, AskRequest } from "../../api";
+import { askApi, Approaches, AskResponse, AskRequest, getSpeechApi } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -12,6 +12,7 @@ import { SettingsButton } from "../../components/SettingsButton/SettingsButton";
 
 import avImage from "../chat/avdima.gif";
 
+var audio = new Audio();
 const OneShot = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [approach, setApproach] = useState<Approaches>(Approaches.RetrieveThenRead);
@@ -22,16 +23,16 @@ const OneShot = () => {
     const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
     const [excludeCategory, setExcludeCategory] = useState<string>("");
-
+    const [useAutoSpeakAnswers, setUseAutoSpeakAnswers] = useState<boolean>(true);
     const lastQuestionRef = useRef<string>("");
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
-    const [answer, setAnswer] = useState<AskResponse>();
-
+    const [answer, setAnswer] = useState<[AskResponse, string | null]>();
     const [activeCitation, setActiveCitation] = useState<string>();
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
+    const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
 
@@ -51,11 +52,16 @@ const OneShot = () => {
                     excludeCategory: excludeCategory.length === 0 ? undefined : excludeCategory,
                     top: retrieveCount,
                     semanticRanker: useSemanticRanker,
-                    semanticCaptions: useSemanticCaptions
+                    semanticCaptions: useSemanticCaptions,
+                    autoSpeakAnswers: useAutoSpeakAnswers
                 }
             };
             const result = await askApi(request);
-            setAnswer(result);
+            const speechUrl = await getSpeechApi(result.answer);
+            setAnswer([result, speechUrl]);
+            if (useAutoSpeakAnswers) {
+                startSynthesis(speechUrl);
+            }
         } catch (e) {
             setError(e);
         } finally {
@@ -91,6 +97,10 @@ const OneShot = () => {
         setUseSemanticCaptions(!!checked);
     };
 
+    const onEnableAutoSpeakAnswersChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseAutoSpeakAnswers(!!checked);
+    };
+
     const onExcludeCategoryChanged = (_ev?: React.FormEvent, newValue?: string) => {
         setExcludeCategory(newValue || "");
     };
@@ -114,6 +124,29 @@ const OneShot = () => {
         } else {
             setActiveAnalysisPanelTab(tab);
         }
+    };
+
+    const startSynthesis = (url: string | null) => {
+        if (isSpeaking) {
+            audio.pause();
+            setIsSpeaking(false);
+        }
+
+        if (url === null) {
+            return;
+        }
+
+        audio = new Audio(url);
+        audio.play();
+        setIsSpeaking(true);
+        audio.addEventListener("ended", () => {
+            setIsSpeaking(false);
+        });
+    };
+
+    const stopSynthesis = () => {
+        audio.pause();
+        setIsSpeaking(false);
     };
 
     const approaches: IChoiceGroupOption[] = [
@@ -155,10 +188,12 @@ const OneShot = () => {
                 {!isLoading && answer && !error && (
                     <div className={styles.oneshotAnswerContainer}>
                         <Answer
-                            answer={answer}
+                            answer={answer[0]}
+                            isSpeaking={isSpeaking}
                             onCitationClicked={x => onShowCitation(x)}
                             onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab)}
                             onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab)}
+                            onSpeechSynthesisClicked={() => (isSpeaking ? stopSynthesis() : startSynthesis(answer[1]))}
                         />
                     </div>
                 )}
@@ -173,7 +208,7 @@ const OneShot = () => {
                         activeCitation={activeCitation}
                         onActiveTabChanged={x => onToggleTab(x)}
                         citationHeight="600px"
-                        answer={answer}
+                        answer={answer[0]}
                         activeTab={activeAnalysisPanelTab}
                     />
                 )}
@@ -249,6 +284,12 @@ const OneShot = () => {
                     label="Use query-contextual summaries instead of whole documents"
                     onChange={onUseSemanticCaptionsChange}
                     disabled={!useSemanticRanker}
+                />
+                <Checkbox
+                    className={styles.chatSettingsSeparator}
+                    checked={useAutoSpeakAnswers}
+                    label="Automatically speak answers"
+                    onChange={onEnableAutoSpeakAnswersChange}
                 />
             </Panel>
         </div>

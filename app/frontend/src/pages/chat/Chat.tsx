@@ -4,7 +4,7 @@ import { SparkleFilled } from "@fluentui/react-icons";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
+import { chatApi, Approaches, AskResponse, ChatRequest, ChatTurn, getSpeechApi } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -12,6 +12,8 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
 import { SettingsButton } from "../../components/SettingsButton";
 import { ClearChatButton } from "../../components/ClearChatButton";
+
+var audio = new Audio();
 import avImage from "./avdima.gif";
 const Chat = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
@@ -21,6 +23,8 @@ const Chat = () => {
     const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
     const [excludeCategory, setExcludeCategory] = useState<string>("");
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
+
+    const [useAutoSpeakAnswers, setUseAutoSpeakAnswers] = useState<boolean>(true);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -32,7 +36,8 @@ const Chat = () => {
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+    const [answers, setAnswers] = useState<[user: string, response: AskResponse, speechUrl: string | null][]>([]);
+    const [runningIndex, setRunningIndex] = useState<number>(-1);
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -53,11 +58,16 @@ const Chat = () => {
                     top: retrieveCount,
                     semanticRanker: useSemanticRanker,
                     semanticCaptions: useSemanticCaptions,
-                    suggestFollowupQuestions: useSuggestFollowupQuestions
+                    suggestFollowupQuestions: useSuggestFollowupQuestions,
+                    autoSpeakAnswers: useAutoSpeakAnswers
                 }
             };
             const result = await chatApi(request);
-            setAnswers([...answers, [question, result]]);
+            const speechUrl = await getSpeechApi(result.answer);
+            setAnswers([...answers, [question, result, speechUrl]]);
+            if (useAutoSpeakAnswers) {
+                startOrStopSynthesis(speechUrl, answers.length);
+            }
         } catch (e) {
             setError(e);
         } finally {
@@ -99,6 +109,10 @@ const Chat = () => {
         setUseSuggestFollowupQuestions(!!checked);
     };
 
+    const onEnableAutoSpeakAnswersChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseAutoSpeakAnswers(!!checked);
+    };
+
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);
     };
@@ -112,6 +126,30 @@ const Chat = () => {
         }
 
         setSelectedAnswer(index);
+    };
+
+    const startOrStopSynthesis = (url: string | null, index: number) => {
+        if (runningIndex === index) {
+            audio.pause();
+            setRunningIndex(-1);
+            return;
+        }
+
+        if (runningIndex !== -1) {
+            audio.pause();
+            setRunningIndex(-1);
+        }
+
+        if (url === null) {
+            return;
+        }
+
+        audio = new Audio(url);
+        audio.play();
+        setRunningIndex(index);
+        audio.addEventListener("ended", () => {
+            setRunningIndex(-1);
+        });
     };
 
     const onToggleTab = (tab: AnalysisPanelTabs, index: number) => {
@@ -154,10 +192,12 @@ const Chat = () => {
                                         <Answer
                                             key={index}
                                             answer={answer[1]}
+                                            isSpeaking={runningIndex === index}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
                                             onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab, index)}
                                             onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab, index)}
+                                            onSpeechSynthesisClicked={() => startOrStopSynthesis(answer[2], index)}
                                             onFollowupQuestionClicked={q => makeApiRequest(q)}
                                             showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
                                         />
@@ -245,6 +285,12 @@ const Chat = () => {
                         checked={useSuggestFollowupQuestions}
                         label="Suggest follow-up questions"
                         onChange={onUseSuggestFollowupQuestionsChange}
+                    />
+                    <Checkbox
+                        className={styles.chatSettingsSeparator}
+                        checked={useAutoSpeakAnswers}
+                        label="Automatically speak answers"
+                        onChange={onEnableAutoSpeakAnswersChange}
                     />
                 </Panel>
             </div>
