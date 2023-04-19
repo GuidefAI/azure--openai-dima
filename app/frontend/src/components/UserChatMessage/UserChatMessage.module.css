@@ -6,12 +6,11 @@
     margin-left: auto;
 }
 
-.message {
+._message_nuee0_9 {
     padding: 20px;
-    background: linear-gradient(#c6e2f8, #a5cae7);
-    border-radius: 17px;
-    border-bottom-right-radius: 17px;
-    box-shadow: 0 2px 4px #00000024, 0 0 2px #0000001f;
+    background: #2d6585;
+    border-radius: 17px 17px 0/17px 17px 0px;
+    box-shadow: 0 8px 7px #00000024, 0 0 8px #0000001f;
     outline: #d3ecffb8 solid 1px;
-    border-bottom-right-radius: 0px;
+    color: white;
 }

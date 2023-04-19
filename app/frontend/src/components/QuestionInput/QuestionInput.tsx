@@ -56,16 +56,19 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
 
     const startRecording = () => {
         console.log("start recording");
-        const recognition = new SpeechRecognition();
-        setIsRecording(true);
-        recognition.start();
-        recognition.onresult = (event: { results: { transcript: SetStateAction<string> }[][] }) => {
-            setQuestion(event.results[0][0].transcript);
-            setIsRecording(false);
-        };
-        recognition.onend = () => {
-            setIsRecording(false);
-        };
+        if ("SpeechRecognition" in window) {
+            const SpeechRecognition = (window as any).speechRecognition || (window as any).webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            setIsRecording(true);
+            recognition.start();
+            recognition.onresult = (event: { results: { transcript: SetStateAction<string> }[][] }) => {
+                setQuestion(event.results[0][0].transcript);
+                setIsRecording(false);
+            };
+            recognition.onend = () => {
+                setIsRecording(false);
+            };
+        }
     };
 
     const stopRecording = () => {

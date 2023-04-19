@@ -10,11 +10,11 @@
     font-size: 28px;
 }
 .avatar {
-    width: 26%;
+    width: 10%;
 }
 
 .answerText {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 400;
     line-height: 22px;
     padding-top: 16px;
@@ -33,7 +33,7 @@
 }
 
 .selected {
-    outline: 2px solid rgba(115, 118, 225, 1);
+    outline: 2px solid #2d6585;
 }
 
 .citationLearnMore {
@@ -43,13 +43,13 @@
 }
 
 .citation {
-    font-weight: 500;
+    font-weight: 601;
     line-height: 24px;
     text-align: center;
     border-radius: 4px;
-    padding: 0px 8px;
-    background: #d1dbfa;
-    color: #123bb6;
+    padding: 0 8px;
+    background: #7e94a136;
+    color: #2b5d7a;
     text-decoration: none;
     cursor: pointer;
 }
@@ -103,8 +103,8 @@ sup {
     min-width: 14px;
     height: 14px;
     border-radius: 3px;
-    background: #d1dbfa;
-    color: #123bb6;
+    background: #7e94a136;
+    color: #2b5d7a;
     text-decoration-color: transparent;
     outline: transparent solid 1px;
     cursor: pointer;
