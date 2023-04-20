@@ -4,6 +4,12 @@
     margin-bottom: 20px;
     max-width: 80%;
     margin-left: auto;
+    padding: 20px;
+    background: #2d6585;
+    border-radius: 17px 17px 0/17px 17px 0px;
+    box-shadow: 0 8px 7px #00000024, 0 0 8px #0000001f;
+    outline: #d3ecffb8 solid 1px;
+    color: white;
 }
 
 ._message_nuee0_9 {

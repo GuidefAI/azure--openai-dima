@@ -42,7 +42,7 @@ export const Answer = ({
                     <AnswerIcon />
                     <div>
                         <IconButton
-                            style={{ color: "black" }}
+                            style={{ color: "#2d6585" }}
                             iconProps={{ iconName: "Lightbulb" }}
                             title="Procesul de selectie"
                             ariaLabel="Procesul de selectie"
@@ -50,7 +50,7 @@ export const Answer = ({
                             disabled={!answer.thoughts}
                         />
                         <IconButton
-                            style={{ color: "black" }}
+                            style={{ color: "#2d6585" }}
                             iconProps={{ iconName: "ClipboardList" }}
                             title="Show supporting content"
                             ariaLabel="Show supporting content"
@@ -68,7 +68,7 @@ export const Answer = ({
                         )}
                         {!isSpeaking && (
                             <IconButton
-                                style={{ color: "black" }}
+                                style={{ color: "#2d6585" }}
                                 iconProps={{ iconName: "Volume3" }}
                                 title="Speak answer"
                                 ariaLabel="Speak answer"
@@ -86,7 +86,9 @@ export const Answer = ({
             {!!parsedAnswer.citations.length && (
                 <Stack.Item>
                     <Stack horizontal wrap tokens={{ childrenGap: 5 }}>
-                        <span className={styles.citationLearnMore}>Citez:</span>
+                        <span className={styles.citationLearnMore}>
+                            <b>Citez:</b>
+                        </span>
                         {parsedAnswer.citations.map((x, i) => {
                             const path = getCitationFilePath(x);
                             return (
@@ -102,7 +104,9 @@ export const Answer = ({
             {!!parsedAnswer.followupQuestions.length && showFollowupQuestions && onFollowupQuestionClicked && (
                 <Stack.Item>
                     <Stack horizontal wrap className={`${!!parsedAnswer.citations.length ? styles.followupQuestionsList : ""}`} tokens={{ childrenGap: 6 }}>
-                        <span className={styles.followupQuestionLearnMore}>Intrebari Follow-up:</span>
+                        <span className={styles.followupQuestionLearnMore}>
+                            <b>Intrebari Follow-up:</b>
+                        </span>
                         {parsedAnswer.followupQuestions.map((x, i) => {
                             return (
                                 <a key={i} className={styles.followupQuestion} title={x} onClick={() => onFollowupQuestionClicked(x)}>
